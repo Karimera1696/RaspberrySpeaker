@@ -1,0 +1,15 @@
+{
+    "python.linting.enabled": true,
+    "python.linting.mypyEnabled": true,
+    "ruff.enable": true,
+    "ruff.lintOnSave": true,
+    "editor.formatOnSave": true,
+    "editor.codeActionsOnSave": {
+        "source.fixAll": "always"
+    },
+    // Ruff をフォーマッタとして登録
+    "editor.defaultFormatter": "charliermarsh.ruff",
+    "python.defaultInterpreterPath": ".venv/bin/python",
+    "mypy.dmypyExecutable": "/home/karimera1924/SmartSpeaker2/venv/bin/dmypy",
+    "mypy.runUsingActiveInterpreter": true,
+}

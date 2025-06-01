@@ -1,0 +1,33 @@
+[project]
+name = "smartspeaker2"
+version = "0.1.0"
+description = ""
+authors = [
+    {name = "aderia",email = "aderia@ymail.ne.jp"}
+]
+readme = "README.md"
+requires-python = ">=3.11"
+dependencies = [
+]
+
+
+[build-system]
+requires = ["poetry-core>=2.0.0,<3.0.0"]
+build-backend = "poetry.core.masonry.api"
+
+[tool.poetry.group.dev.dependencies]
+ruff = "^0.11.12"
+mypy = "^1.16.0"
+
+[tool.mypy]
+python_version = "3.11"
+strict = true
+ignore_missing_imports = true
+
+[tool.ruff]
+line-length = 100
+target-version = "py311"
+exclude = ["__pycache__", "venv", ".venv"]
+
+[tool.ruff.lint]
+select = ["E", "F", "I"]  # E: エラー, F: バグ系, I: import順
