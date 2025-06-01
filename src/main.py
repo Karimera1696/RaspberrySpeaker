@@ -1,32 +1,47 @@
 import asyncio
 
+from dummy_impls import DummyChatModel, DummySpeechToText, DummyTextToSpeech, DummyWakeWordDetector
 from interfaces import ChatModel, SpeechToText, TextToSpeech, WakeWordDetector
 
 
-# ダミー実装は後で作りますが、今は type hint として使うだけ
 async def pipeline(
     wake: WakeWordDetector,
     stt: SpeechToText,
     chat: ChatModel,
     tts: TextToSpeech,
 ) -> None:
-    # ここで await wake.wait_for_wake() が呼べることが保証される
-    await wake.wait_for_wake()
-    text = await stt.transcribe(b"dummy")
-    resp = await chat.generate(text)
-    audio = await tts.synthesize(resp)
-    print("一連の流れが動きました")
+    while True:
+        # ① Wake Word 待機
+        await wake.wait_for_wake()
+
+        # ② ダミー録音した音声バイト（今回は空バイトでOK）
+        audio: bytes = b"dummy audio"
+        print("[Pipeline] 録音データ受領 (長さ:", len(audio), "バイト)")
+
+        # ③ STT（文字起こし）
+        text = await stt.transcribe(audio)
+        print("[Pipeline] 認識結果:", text)
+
+        # ④ LLM 応答生成
+        resp = await chat.generate(text)
+        print("[Pipeline] LLM 応答:", resp)
+
+        # ⑤ TTS 合成
+        audio_out = await tts.synthesize(resp)
+        print("[Pipeline] TTS 出力 (バイト長:", len(audio_out), ")")
+
+        # ⑥ ループを続けるか確認（今回はずっとループ）
+        print("[Pipeline] 次の Wake Word を待ちます...\n")
 
 
 async def main() -> None:
-    # いまは実装クラスを渡せないので、None にキャストしておく例
-    # （後で本物のクラスを作成して差し替えます）
-    await pipeline(
-        wake=None,  # type: ignore
-        stt=None,  # type: ignore
-        chat=None,  # type: ignore
-        tts=None,  # type: ignore
-    )
+    wake_impl = DummyWakeWordDetector()
+    stt_impl = DummySpeechToText()
+    chat_impl = DummyChatModel()
+    tts_impl = DummyTextToSpeech()
+
+    # pipeline を起動（このままだと無限ループなので Ctrl+C で止します）
+    await pipeline(wake_impl, stt_impl, chat_impl, tts_impl)
 
 
 if __name__ == "__main__":
