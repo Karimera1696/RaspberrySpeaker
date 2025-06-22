@@ -15,7 +15,9 @@ async def main() -> None:
     print("ここはすぐに出力される")
     # 両方のタスクを待つ
     await task1
+    print("1秒後に出るメッセージが出力された")
     await task2
+    print("0.5秒後に出るメッセージが出力された")
 
 
 if __name__ == "__main__":

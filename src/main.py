@@ -1,7 +1,8 @@
 import asyncio
 
-from dummy_impls import DummyChatModel, DummySpeechToText, DummyTextToSpeech, DummyWakeWordDetector
+from dummy_impls import DummyChatModel, DummySpeechToText, DummyTextToSpeech
 from interfaces import ChatModel, SpeechToText, TextToSpeech, WakeWordDetector
+from wake.dummy_wake import DummyWakeWordDetector
 
 
 async def pipeline(

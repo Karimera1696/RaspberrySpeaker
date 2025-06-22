@@ -1,14 +1,8 @@
 import asyncio
-import random
 
-from interfaces import ChatModel, SpeechToText, TextToSpeech, WakeWordDetector
-
+from interfaces import ChatModel, SpeechToText, TextToSpeech
 
 # ← ここで Protocol を継承しているので、import は使われていると認識される
-class DummyWakeWordDetector(WakeWordDetector):
-    async def wait_for_wake(self) -> None:
-        await asyncio.sleep(random.uniform(0.5, 1.5))
-        print("[DummyWake] Wake Word 検出！")
 
 
 class DummySpeechToText(SpeechToText):
