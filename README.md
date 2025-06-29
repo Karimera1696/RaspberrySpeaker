@@ -2,7 +2,11 @@
 
 Local smart-speaker pipeline: Wake-word → STT → LLM → Home Assistant (MCP) → TTS.
 
-## Quick Start
+# Goals
+- Enables compound commands like "Turn off the air conditioner and turn off the lights" (not possible with Google Home)
+- Make the reading voice freely changeable.
+
+## Quick Start(untested)
 ```bash
 git clone https://github.com/Karimera1696/SmartSpeaker2
 cp .env.example .env   # fill HOSTs / tokens
