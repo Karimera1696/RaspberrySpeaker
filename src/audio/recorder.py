@@ -19,5 +19,7 @@ class Recorder:
     noise  : NoiseSampler
     """
 
-    async def record_until_silence(self, timeout: float | None = None) -> bytes:  # noqa: D401
+    async def record_until_silence(
+        self, timeout: float | None = None
+    ) -> bytes:  # noqa: D401
         pass

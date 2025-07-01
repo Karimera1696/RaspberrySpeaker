@@ -12,4 +12,7 @@
     "python.defaultInterpreterPath": ".venv/bin/python",
     "mypy.dmypyExecutable": "/home/karimera1924/SmartSpeaker2/venv/bin/dmypy",
     "mypy.runUsingActiveInterpreter": true,
+    
+    "python.formatting.provider": "black",
+    "python.formatting.blackArgs": ["--line-length", "88"],
 }

@@ -38,7 +38,9 @@ class AudioStream:
     async def run(self) -> None:
         loop = asyncio.get_running_loop()
 
-        def _cb(indata: np.ndarray, frames: int, time: float, status: sd.CallbackFlags) -> None:
+        def _cb(
+            indata: np.ndarray, frames: int, time: float, status: sd.CallbackFlags
+        ) -> None:
             frame = indata.flatten().copy()
             try:
                 loop.call_soon_threadsafe(self._queue.put_nowait, frame)
