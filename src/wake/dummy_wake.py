@@ -1,7 +1,7 @@
 import asyncio
 import random
 
-from interfaces import WakeWordDetector
+from ..interfaces import WakeWordDetector
 
 
 class DummyWakeWordDetector(WakeWordDetector):

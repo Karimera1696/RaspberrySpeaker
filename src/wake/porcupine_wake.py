@@ -1,6 +1,6 @@
 import asyncio
 
-from interfaces import WakeWordDetector
+from ..interfaces import WakeWordDetector
 
 
 class PorcupineWakeWordDetector(WakeWordDetector):

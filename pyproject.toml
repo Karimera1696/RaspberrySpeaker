@@ -1,14 +1,15 @@
-[project]
+[tool.poetry]
 name = "smartspeaker2"
 version = "0.1.0"
 description = ""
-authors = [
-    {name = "aderia",email = "aderia@ymail.ne.jp"}
-]
+authors = ["aderia <aderia@ymail.ne.jp>"]
 readme = "README.md"
-requires-python = ">=3.11"
-dependencies = [
-]
+packages = [{include = "src"}]
+
+[tool.poetry.dependencies]
+python = "^3.11"
+numpy = "*"
+sounddevice = "*"
 
 
 [build-system]

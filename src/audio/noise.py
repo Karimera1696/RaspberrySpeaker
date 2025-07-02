@@ -4,8 +4,7 @@ import time
 
 import numpy as np
 
-from settings import settings
-
+from ..settings import settings
 from .stream import AudioStream
 
 
@@ -33,7 +32,8 @@ class NoiseSampler:
 
     async def start(self) -> None:
         buf: list[int] = []
-        async for frame in self._stream.frames():
+        queue = self._stream.subscribe()
+        async for frame in self._stream.frames(queue):
             rms = int(np.max(np.abs(frame)))
             buf.append(rms)
             if time.time() - self._last >= settings.NOISE_MEASURE_INTERVAL:
