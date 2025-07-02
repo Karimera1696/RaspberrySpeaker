@@ -1,8 +1,6 @@
 import asyncio
 
-from interfaces import ChatModel, SpeechToText, TextToSpeech
-
-# ← ここで Protocol を継承しているので、import は使われていると認識される
+from .interfaces import ChatModel, SpeechToText, TextToSpeech
 
 
 class DummySpeechToText(SpeechToText):

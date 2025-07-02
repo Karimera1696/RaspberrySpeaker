@@ -1,5 +1,18 @@
 from __future__ import annotations
 
+import io
+import time
+import wave
+from typing import TYPE_CHECKING
+
+import numpy as np
+
+from ..settings import settings
+
+if TYPE_CHECKING:
+    from .noise import NoiseSampler
+    from .stream import AudioStream
+
 
 class Recorder:
     """Record until silence (or timeout) and return a WAV blob.
@@ -19,7 +32,77 @@ class Recorder:
     noise  : NoiseSampler
     """
 
-    async def record_until_silence(
-        self, timeout: float | None = None
-    ) -> bytes:  # noqa: D401
-        pass
+    _stream: AudioStream
+    _noise: NoiseSampler
+
+    def __init__(self, stream: AudioStream, noise: NoiseSampler):
+        self._stream = stream
+        self._noise = noise
+
+    async def record_until_silence(self, timeout: float | None = None) -> bytes:  # noqa: D401
+        """Record audio until silence is detected or timeout occurs.
+
+        Returns
+        -------
+        bytes
+            WAV format audio data
+        """
+        max_duration = timeout or settings.MAX_RECORD_DURATION
+        silence_duration = settings.SILENCE_DURATION
+        threshold = self._noise.current_threshold()
+
+        frames: list[np.ndarray] = []
+        start_time = time.time()
+        last_sound_time = start_time
+
+        print(f"[Recorder] Recording... (threshold={threshold}, max={max_duration}s)")
+
+        queue = self._stream.subscribe()
+        async for frame in self._stream.frames(queue):
+            frames.append(frame)
+            current_time = time.time()
+
+            # Check maximum duration
+            if current_time - start_time >= max_duration:
+                print(f"[Recorder] Stopped: max duration ({max_duration}s) reached")
+                break
+
+            # Check audio level
+            peak = int(np.max(np.abs(frame)))
+            if peak > threshold:
+                last_sound_time = current_time
+
+            # Check silence duration
+            silence_time = current_time - last_sound_time
+            if silence_time >= silence_duration:
+                print(f"[Recorder] Stopped: silence detected ({silence_time:.1f}s)")
+                break
+
+        # Convert frames to WAV bytes
+        if not frames:
+            print("[Recorder] Warning: No frames recorded")
+            return b""
+
+        return self._frames_to_wav(frames)
+
+    def _frames_to_wav(self, frames: list[np.ndarray]) -> bytes:
+        """Convert audio frames to WAV format bytes."""
+        # Concatenate all frames
+        audio_data = np.concatenate(frames)
+
+        # Create WAV file in memory
+        buffer = io.BytesIO()
+        with wave.open(buffer, "wb") as wav_file:
+            wav_file.setnchannels(1)  # Mono
+            wav_file.setsampwidth(2)  # 16-bit
+            wav_file.setframerate(self._stream._sample_rate)
+            wav_file.writeframes(audio_data.tobytes())
+
+        wav_bytes = buffer.getvalue()
+        duration_seconds = len(audio_data) / self._stream._sample_rate
+        print(
+            f"[Recorder] Created WAV: {len(wav_bytes)} bytes, "
+            f"{len(audio_data)} samples, {duration_seconds:.2f}s duration "
+            f"@ {self._stream._sample_rate}Hz"
+        )
+        return wav_bytes
