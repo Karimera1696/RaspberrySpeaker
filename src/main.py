@@ -11,6 +11,7 @@ async def pipeline(
     chat: ChatModel,
     tts: TextToSpeech,
 ) -> None:
+    """Main pipeline for smart speaker functionality."""
     while True:
         # ① Wake Word 待機
         await wake.wait_for_wake()
@@ -36,6 +37,7 @@ async def pipeline(
 
 
 async def main() -> None:
+    """Main entry point."""
     wake_impl = DummyWakeWordDetector()
     stt_impl = DummySpeechToText()
     chat_impl = DummyChatModel()

@@ -1,18 +1,16 @@
 {
-    "python.linting.enabled": true,
-    "python.linting.mypyEnabled": true,
+    "python.defaultInterpreterPath": "./venv/bin/python",
+
+    // Ruff
     "ruff.enable": true,
-    "ruff.lintOnSave": true,
+    "ruff.nativeServer": "on",
+    "editor.defaultFormatter": "charliermarsh.ruff",
     "editor.formatOnSave": true,
     "editor.codeActionsOnSave": {
         "source.fixAll": "always"
     },
-    // Ruff をフォーマッタとして登録
-    "editor.defaultFormatter": "charliermarsh.ruff",
-    "python.defaultInterpreterPath": ".venv/bin/python",
-    "mypy.dmypyExecutable": "/home/karimera1924/SmartSpeaker2/venv/bin/dmypy",
+
+    // Mypy
     "mypy.runUsingActiveInterpreter": true,
-    
-    "python.formatting.provider": "black",
-    "python.formatting.blackArgs": ["--line-length", "88"],
+    "commentTranslate.multiLineMerge": true,
 }
