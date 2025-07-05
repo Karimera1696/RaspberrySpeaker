@@ -1,16 +1,37 @@
-"""Audio device utilities for detecting optimal sample rates."""
+from __future__ import annotations
+
+from dataclasses import dataclass
+from typing import ClassVar
 
 import sounddevice as sd
 
 
-def get_supported_sample_rate() -> int:
-    """Get the default sample rate for the input device."""
-    try:
-        device = sd.query_devices(sd.default.device[0], kind="input")
-        device_rate = int(device["default_samplerate"])
+@dataclass(slots=True, frozen=True)
+class AudioDevice:
+    """Immutable snapshot of an input device."""
 
-        # Verify the device rate is actually supported
-        sd.check_input_settings(device=sd.default.device[0], samplerate=device_rate, channels=1)
-        return device_rate
-    except Exception:
-        raise RuntimeError("Could not determine supported sample rate for input device")
+    id: int
+    name: str
+    sample_rate: int
+    channels: int
+
+    # Explicitly declare class attributes
+    _CACHE: ClassVar[AudioDevice | None] = None
+
+    @classmethod
+    def default(cls) -> "AudioDevice":
+        """Return lazily-constructed default input device."""
+        if cls._CACHE is None:
+            dev_id = sd.default.device[0]
+            info = sd.query_devices(dev_id, "input")
+            rate = int(info["default_samplerate"])
+
+            sd.check_input_settings(device=dev_id, samplerate=rate, channels=1)
+
+            cls._CACHE = cls(
+                id=dev_id,
+                name=info["name"],
+                sample_rate=rate,
+                channels=info["max_input_channels"],
+            )
+        return cls._CACHE

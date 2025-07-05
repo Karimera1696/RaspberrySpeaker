@@ -8,7 +8,7 @@ from src.audio.stream import AudioStream
 
 async def main() -> None:
     """Noise sampler operation check code."""
-    stream = AudioStream(sample_rate=44100)
+    stream = AudioStream()
     noise = NoiseSampler(stream)
 
     # Start Audio stream (mic capture in the background)

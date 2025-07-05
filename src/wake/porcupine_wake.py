@@ -8,6 +8,7 @@ from ..settings import settings
 
 class PorcupineWakeWordDetector(WakeWordDetector):
     """Porcupine wake word detector implementation."""
+
     _stream: AudioStream
     _noise_sampler: NoiseSampler
     _porcupine: pvporcupine.Porcupine
@@ -16,11 +17,11 @@ class PorcupineWakeWordDetector(WakeWordDetector):
 
     def __init__(self, stream: AudioStream, noise_sampler: NoiseSampler) -> None:
         """Initialize Porcupine wake word detector.
-        
+
         Args:
             stream: Audio stream to listen for wake words.
             noise_sampler: Noise sampler for filtering out noise.
-            
+
         Raises:
             RuntimeError: If PORCUPINE_ACCESS_KEY is not set.
         """
@@ -35,7 +36,7 @@ class PorcupineWakeWordDetector(WakeWordDetector):
             model_path=str(settings.PORCUPINE_MODEL_PATH),
             keyword_paths=[str(settings.PORCUPINE_KEYWORD_PATH)],
         )
-        self._stream_sample_rate = stream._sample_rate
+        self._stream_sample_rate = stream._rate
         self._porcupine_sample_rate = self._porcupine.sample_rate
 
         print(f"[Porcupine] Expected sample rate: {self._porcupine_sample_rate}")

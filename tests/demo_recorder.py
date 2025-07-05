@@ -6,6 +6,7 @@ from src.audio.stream import AudioStream
 
 
 async def main() -> None:
+    """Recorder operation check code."""
     # Components setup
     stream = AudioStream()
     noise = NoiseSampler(stream)

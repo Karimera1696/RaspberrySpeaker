@@ -6,7 +6,8 @@ from src.audio.stream import AudioStream
 
 
 async def main() -> None:
-    stream = AudioStream(sample_rate=44100)  # デフォルト設定で開く
+    """AudioStream operation check code."""
+    stream = AudioStream()  # デフォルト設定で開く
     # 背景でマイク取り込みを開始
     asyncio.create_task(stream.run())
     count = 0

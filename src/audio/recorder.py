@@ -87,14 +87,14 @@ class Recorder:
         with wave.open(buffer, "wb") as wav_file:
             wav_file.setnchannels(1)  # Mono
             wav_file.setsampwidth(2)  # 16-bit
-            wav_file.setframerate(self._stream._sample_rate)
+            wav_file.setframerate(self._stream._rate)
             wav_file.writeframes(audio_data.tobytes())
 
         wav_bytes = buffer.getvalue()
-        duration_seconds = len(audio_data) / self._stream._sample_rate
+        duration_seconds = len(audio_data) / self._stream._rate
         print(
             f"[Recorder] Created WAV: {len(wav_bytes)} bytes, "
             f"{len(audio_data)} samples, {duration_seconds:.2f}s duration "
-            f"@ {self._stream._sample_rate}Hz"
+            f"@ {self._stream._rate}Hz"
         )
         return wav_bytes

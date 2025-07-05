@@ -5,7 +5,7 @@ from .interfaces import ChatModel, SpeechToText, TextToSpeech
 
 class DummySpeechToText(SpeechToText):
     """Dummy speech-to-text implementation for testing."""
-    async def transcribe(self, audio_bytes: bytes) -> str:
+    async def transcribe(self, _audio_bytes: bytes) -> str:
         """Transcribe audio bytes to text (dummy)."""
         await asyncio.sleep(0.2)
         return "Dummy transcription result"
