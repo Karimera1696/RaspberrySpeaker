@@ -4,7 +4,7 @@ from pathlib import Path
 
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
-# 設定のシングルトン
+# Settings singleton
 settings: Settings
 
 
@@ -12,23 +12,30 @@ class Settings(BaseSettings):
     """Global configuration pulled from environment (.env)."""
 
     # -------- Paths --------
-    MODEL_ROOT: Path = Path("models")  # porcupine / whisper などのモデル置き場
+    MODEL_ROOT: Path = Path("models")  # Model directory for porcupine / whisper etc.
 
     # -------- Audio --------
-    SAMPLE_RATE: int = 16_000  # デフォルト録音サンプルレート
-    CHANNELS: int = 1  # 1=モノラル, 2=ステレオ
+    SAMPLE_RATE: int = 16_000  # Default recording sample rate
+    CHANNELS: int = 1  # 1=mono, 2=stereo
 
     # -------- Noise Sampler --------
-    NOISE_MARGIN: int = 2_000  # ピーク平均に足すマージン
-    NOISE_MEASURE_INTERVAL: float = 10.0  # 何秒ごとに環境ノイズを更新するか
-    NOISE_MEASURE_DURATION: float = 0.3  # 計測に使うサンプル秒数 (未実装)
+    NOISE_MARGIN: int = 300  # Margin added to peak average
+    NOISE_MEASURE_INTERVAL: float = 10.0  # How often to update noise level (seconds)
+    NOISE_MEASURE_DURATION: float = 0.3  # Sample duration for measurement (not implemented)
 
     # -------- Recorder --------
-    SILENCE_DURATION: float = 1.5  # 無音が続いたら録音停止 (秒)
-    MAX_RECORD_DURATION: float = 10.0  # 最大録音時間 (秒)
+    SILENCE_DURATION: float = 1.5  # Stop recording after silence (seconds)
+    MAX_RECORD_DURATION: float = 10.0  # Maximum recording time (seconds)
 
     # -------- API Keys --------
     OPENAI_API_KEY: str | None = None
+    PORCUPINE_ACCESS_KEY: str | None = None
+
+    # -------- Porcupine Settings --------
+    PORCUPINE_MODEL_PATH: Path = MODEL_ROOT / "porcupine" / "acoustic" / "porcupine_params_ja.pv"
+    PORCUPINE_KEYWORD_PATH: Path = (
+        MODEL_ROOT / "porcupine" / "wakewords" / "Zundamon_ja_raspberry-pi_v3_0_0.ppn"
+    )
 
     model_config = SettingsConfigDict(env_file=".env", extra="ignore")
 

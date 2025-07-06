@@ -15,37 +15,29 @@ if TYPE_CHECKING:
 
 
 class Recorder:
-    """Record until silence (or timeout) and return a WAV blob.
-
-    Workflow
-    --------
-    1. Collect frames from `AudioStream.frames()`
-    2. Stop when
-       * peak < `NoiseSampler.current_threshold()` lasts
-         `SILENCE_DURATION` seconds, or
-       * `MAX_RECORD_DURATION` is exceeded
-    3. Concatenate to WAV bytes and return.
-
-    Parameters
-    ----------
-    stream : AudioStream
-    noise  : NoiseSampler
-    """
+    """Record until silence (or timeout) and return a WAV blob."""
 
     _stream: AudioStream
     _noise: NoiseSampler
 
-    def __init__(self, stream: AudioStream, noise: NoiseSampler):
+    def __init__(self, stream: AudioStream, noise: NoiseSampler) -> None:
+        """Initialize recorder.
+        
+        Args:
+            stream: Audio stream source.
+            noise: Noise sampler for threshold detection.
+        """
         self._stream = stream
         self._noise = noise
 
-    async def record_until_silence(self, timeout: float | None = None) -> bytes:  # noqa: D401
+    async def record_until_silence(self, timeout: float | None = None) -> bytes:
         """Record audio until silence is detected or timeout occurs.
 
-        Returns
-        -------
-        bytes
-            WAV format audio data
+        Args:
+            timeout: Maximum recording duration in seconds.
+            
+        Returns:
+            WAV format audio data.
         """
         max_duration = timeout or settings.MAX_RECORD_DURATION
         silence_duration = settings.SILENCE_DURATION
@@ -95,14 +87,14 @@ class Recorder:
         with wave.open(buffer, "wb") as wav_file:
             wav_file.setnchannels(1)  # Mono
             wav_file.setsampwidth(2)  # 16-bit
-            wav_file.setframerate(self._stream._sample_rate)
+            wav_file.setframerate(self._stream._rate)
             wav_file.writeframes(audio_data.tobytes())
 
         wav_bytes = buffer.getvalue()
-        duration_seconds = len(audio_data) / self._stream._sample_rate
+        duration_seconds = len(audio_data) / self._stream._rate
         print(
             f"[Recorder] Created WAV: {len(wav_bytes)} bytes, "
             f"{len(audio_data)} samples, {duration_seconds:.2f}s duration "
-            f"@ {self._stream._sample_rate}Hz"
+            f"@ {self._stream._rate}Hz"
         )
         return wav_bytes

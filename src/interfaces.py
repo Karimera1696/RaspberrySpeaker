@@ -1,38 +1,54 @@
-# src/interfaces.py
 from typing import Protocol
 
 
 class WakeWordDetector(Protocol):
+    """Wake word detector protocol."""
+    
     async def wait_for_wake(self) -> None:
-        """
-        Wake Word が検出されるまで非同期で待機し、
-        検出されたら戻ってくる
-        """
+        """Wait for wake word detection."""
         ...
 
 
 class SpeechToText(Protocol):
+    """Speech-to-text protocol."""
+    
     async def transcribe(self, audio_bytes: bytes) -> str:
-        """
-        - audio_bytes: PCM や WAV など生の音声データ（バイト列）
-        - 戻り値: 文字起こししたテキスト
+        """Transcribe audio bytes to text.
+        
+        Args:
+            audio_bytes: Raw audio data (PCM or WAV format).
+            
+        Returns:
+            Transcribed text.
         """
         ...
 
 
 class ChatModel(Protocol):
+    """Chat model protocol."""
+    
     async def generate(self, prompt: str) -> str:
-        """
-        - prompt: いま入力されたテキスト
-        - 戻り値: AI が返してきたテキスト応答
+        """Generate AI response from prompt.
+        
+        Args:
+            prompt: Input text prompt.
+            
+        Returns:
+            AI-generated text response.
         """
         ...
 
 
 class TextToSpeech(Protocol):
+    """Text-to-speech protocol."""
+    
     async def synthesize(self, text: str) -> bytes:
-        """
-        - text: 返答テキスト
-        - 戻り値: 音声合成したバイト列（PCM/WAV等）
+        """Synthesize text to speech audio.
+        
+        Args:
+            text: Text to synthesize.
+            
+        Returns:
+            Synthesized audio data (PCM or WAV format).
         """
         ...

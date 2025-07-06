@@ -10,6 +10,9 @@ packages = [{include = "src"}]
 python = "^3.11"
 numpy = "*"
 sounddevice = "*"
+pvporcupine = "*"
+pydantic-settings = "*"
+scipy = "^1.16.0"
 
 
 [build-system]
@@ -22,8 +25,32 @@ mypy = "^1.16.0"
 
 [tool.mypy]
 python_version = "3.11"
-strict = true
-ignore_missing_imports = true
+color_output = true # エラーメッセージに色を付ける
+error_summary = true # エラーメッセージの概要を表示
+pretty = true # エラーメッセージを見やすくフォーマットする
+show_column_numbers = true # エラーの発生した列番号を表示
+show_error_codes = true # エラーコードを表示
+show_error_context = true # エラーメッセージのコンテキストを表示
+show_traceback = true # mypyがクラッシュした場合にトレースバックを表示
+warn_no_return = true # 戻り値がない関数やメソッドでのreturn文の省略に警告
+warn_redundant_casts = true # 不要な型変換に警告
+warn_return_any = true # Any型を返す関数やメソッドに警告
+warn_unreachable = true # 到達不能なコードに警告
+warn_unused_configs = true # 使用されていないconfigオプションに警告
+warn_unused_ignores = true # 使用されていないtypeignoreコメントに警告
+allow_redefinition = false # 同じスコープ内での変数の再定義を禁止
+allow_untyped_globals = false # 型注釈がないグローバル変数の使用を禁止
+check_untyped_defs = true # 型注釈がない関数やメソッドに対して型チェックを行う
+disallow_incomplete_defs = true # 型注釈の一部が欠けている関数やメソッドの定義を禁止
+disallow_untyped_defs = true # 型注釈がない関数やメソッドの定義を禁止
+disallow_untyped_calls = false # 型注釈がない関数やメソッドの呼び出しは禁止しない
+disallow_untyped_decorators = false # 型注釈がないデコレータの使用は禁止しない
+ignore_missing_imports = true # 型情報がないモジュールのインポートを無視
+implicit_reexport = false # 型注釈がない関数やメソッドの再エクスポートを禁止
+no_implicit_optional = true # Optionalの型を明示的に宣言する必要がある
+strict = true # すべてのstrictモード関連のオプションを有効にします。このオプションが有効になっている場合、以下のオプションも自動的に有効になります。
+# strict_equality = true # 異なる型同士の等価性の比較を禁止
+# strict_optional = true # Noneと他の型の混在を許容しない
 
 [tool.ruff]
 line-length = 100
@@ -31,4 +58,11 @@ target-version = "py311"
 exclude = ["__pycache__", "venv", ".venv"]
 
 [tool.ruff.lint]
-select = ["E", "F", "I"]  # E: エラー, F: バグ系, I: import順
+select = ["ANN", "E", "F", "I", "D", "ARG"]  # ANN:型注釈, E: エラー, F: バグ系, I: import順, D: PyDocStyle, ARG: 引数・戻り値の対応漏れ検出
+ignore = [
+  "D100",  # モジュール docstring 省略を許す
+  "D401",  # 要約は命令形でなくても OK
+]
+
+[tool.ruff.lint.pydocstyle]
+convention = "google"

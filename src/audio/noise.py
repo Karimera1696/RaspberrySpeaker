@@ -9,39 +9,36 @@ from .stream import AudioStream
 
 
 class NoiseSampler:
-    """Track ambient noise and publish a threshold.
-
-    Runs as a background coroutine: every *N* seconds it averages the
-    peak amplitude of recent frames and adds `NOISE_MARGIN`.
-    `current_threshold()` returns that value for VAD / wake-word checks.
-
-    Parameters
-    ----------
-    stream : AudioStream
-        Live PCM source.
-    """
+    """Track ambient noise and publish a threshold."""
 
     _stream: AudioStream
-    _thr: int
-    _last: float
+    _threshold: int
+    _last_noise_sample_time: float
 
-    def __init__(self, stream: AudioStream):
+    def __init__(self, stream: AudioStream) -> None:
+        """Initialize noise sampler.
+
+        Args:
+            stream: Live PCM audio stream source.
+        """
         self._stream = stream
-        self._thr = 0
-        self._last = 0.0
+        self._threshold = 0
+        self._last_noise_sample_time = 0.0
 
     async def start(self) -> None:
+        """Start noise sampling coroutine."""
         buf: list[int] = []
         queue = self._stream.subscribe()
         async for frame in self._stream.frames(queue):
-            rms = int(np.max(np.abs(frame)))
-            buf.append(rms)
-            if time.time() - self._last >= settings.NOISE_MEASURE_INTERVAL:
+            peak_amplitude = int(np.max(np.abs(frame)))
+            buf.append(peak_amplitude)
+            if time.time() - self._last_noise_sample_time >= settings.NOISE_MEASURE_INTERVAL:
                 avg = int(np.mean(buf))
-                self._thr = avg + settings.NOISE_MARGIN
-                print("[Noise] thr =", self._thr)
+                self._threshold = avg + settings.NOISE_MARGIN
+                print("[Noise] threshold =", self._threshold)
                 buf.clear()
-                self._last = time.time()
+                self._last_noise_sample_time = time.time()
 
     def current_threshold(self) -> int:
-        return self._thr or 6000  # デフォルト保険
+        """Get current noise threshold."""
+        return self._threshold or 1000  # Default fallback
