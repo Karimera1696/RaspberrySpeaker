@@ -19,7 +19,7 @@ class Settings(BaseSettings):
     CHANNELS: int = 1  # 1=mono, 2=stereo
 
     # -------- Noise Sampler --------
-    NOISE_MARGIN: int = 0  # Margin added to peak average
+    NOISE_MARGIN: int = 300  # Margin added to peak average
     NOISE_MEASURE_INTERVAL: float = 10.0  # How often to update noise level (seconds)
     NOISE_MEASURE_DURATION: float = 0.3  # Sample duration for measurement (not implemented)
 

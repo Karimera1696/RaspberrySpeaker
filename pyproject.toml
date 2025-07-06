@@ -12,6 +12,7 @@ numpy = "*"
 sounddevice = "*"
 pvporcupine = "*"
 pydantic-settings = "*"
+scipy = "^1.16.0"
 
 
 [build-system]

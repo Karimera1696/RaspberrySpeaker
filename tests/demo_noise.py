@@ -19,8 +19,9 @@ async def main() -> None:
     queue = stream.subscribe()
     async for frame in stream.frames(queue):
         max_value = np.max(np.abs(frame))
-        print(f"Frame: {max_value} Noise threshold: {noise.current_threshold()}")
-        await asyncio.sleep(0.2)
+        if noise.current_threshold() < max_value:
+            print("Voice detected!")
+        await asyncio.sleep(0.1)
 
 
 if __name__ == "__main__":
