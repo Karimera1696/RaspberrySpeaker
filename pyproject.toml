@@ -13,6 +13,8 @@ sounddevice = "*"
 pvporcupine = "*"
 pydantic-settings = "*"
 scipy = "^1.16.0"
+pytest = "^8.4.1"
+pytest-asyncio = "^1.0.0"
 
 
 [build-system]
