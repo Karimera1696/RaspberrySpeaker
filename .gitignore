@@ -1,6 +1,9 @@
 # VS Code personal settings
 .vscode/
 
+# Claude
+.claude/
+
 # models
 models/
 
