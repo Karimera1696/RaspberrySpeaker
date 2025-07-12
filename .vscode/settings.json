@@ -1,16 +1,15 @@
 {
-    "python.defaultInterpreterPath": "./venv/bin/python",
+    // Formatting
+    "editor.formatOnSave": true,
 
     // Ruff
     "ruff.enable": true,
     "ruff.nativeServer": "on",
     "editor.defaultFormatter": "charliermarsh.ruff",
-    "editor.formatOnSave": true,
     "editor.codeActionsOnSave": {
         "source.fixAll": "always"
     },
 
     // Mypy
     "mypy.runUsingActiveInterpreter": true,
-    "commentTranslate.multiLineMerge": true,
 }

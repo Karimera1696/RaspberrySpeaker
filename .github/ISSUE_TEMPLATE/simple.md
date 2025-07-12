@@ -1,3 +1,11 @@
+---
+name: Simple template           # Labels displayed in the list
+about: Goal / Done / Notes only # Description
+title: ""                       # Blanks available
+labels: []                      # Optional
+assignees: []                   # Optional
+---
+
 ### Goal
 <!-- What / Why -->
 
