@@ -1,7 +1,10 @@
+# VS Code personal settings
+.vscode/
+
 # models
 models/
 
-# テストで生成したwavファイル
+# Wav file generated in E2E test
 *.wav
 
 # Byte-compiled / optimized / DLL files
