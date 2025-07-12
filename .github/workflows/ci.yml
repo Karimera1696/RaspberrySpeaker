@@ -24,12 +24,18 @@ jobs:
         uses: actions/setup-python@v5
         with:
           python-version: ${{ matrix.python-version }}
-          cache: poetry
-
+          
       - name: Install Poetry
-        uses: abatilo/actions-poetry@v3
+        run: |
+          pipx install poetry==1.8.*
+          poetry config virtualenvs.create true --local
+          poetry config virtualenvs.in-project true --local
+          
+      - name: Cache virtual environment
+        uses: actions/cache@v4
         with:
-          poetry-version: "1.8.3"
+          path: .venv
+          key: venv-${{ runner.os }}-${{ matrix.python-version }}-${{ hashFiles('**/poetry.lock') }}
 
       - name: Install dependencies
         run: |
