@@ -6,6 +6,7 @@ import numpy as np
 
 from ..settings import settings
 from .stream import AudioStream
+from .utils import calculate_rms
 
 
 class NoiseSampler:
@@ -27,14 +28,14 @@ class NoiseSampler:
 
     async def start(self) -> None:
         """Start noise sampling coroutine."""
-        buf: list[int] = []
+        buf: list[float] = []
         queue = self._stream.subscribe()
         async for frame in self._stream.frames(queue):
-            peak_amplitude = int(np.max(np.abs(frame)))
-            buf.append(peak_amplitude)
+            rms_level = calculate_rms(frame)
+            buf.append(rms_level)
             if time.time() - self._last_noise_sample_time >= settings.NOISE_MEASURE_INTERVAL:
-                avg = int(np.mean(buf))
-                self._threshold = avg + settings.NOISE_MARGIN
+                avg = np.mean(buf)
+                self._threshold = int(avg + settings.NOISE_MARGIN)
                 print("[Noise] threshold =", self._threshold)
                 buf.clear()
                 self._last_noise_sample_time = time.time()

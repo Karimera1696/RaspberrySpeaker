@@ -1,8 +1,47 @@
 import asyncio
+import io
+import wave
+
+import sounddevice as sd
 
 from src.audio.noise import NoiseSampler
 from src.audio.recorder import Recorder
 from src.audio.stream import AudioStream
+
+
+async def play_wav_bytes(wav_data: bytes) -> None:
+    """Play WAV audio data using sounddevice.
+
+    Args:
+        wav_data: WAV format audio bytes.
+    """
+    # Parse WAV data
+    buffer = io.BytesIO(wav_data)
+    with wave.open(buffer, "rb") as wav_file:
+        frames = wav_file.readframes(wav_file.getnframes())
+        sample_rate = wav_file.getframerate()
+        channels = wav_file.getnchannels()
+        sample_width = wav_file.getsampwidth()
+
+    # Convert to numpy array for sounddevice
+    import numpy as np
+
+    if sample_width == 2:  # 16-bit
+        audio_array = np.frombuffer(frames, dtype=np.int16)
+    elif sample_width == 4:  # 32-bit
+        audio_array = np.frombuffer(frames, dtype=np.int32)
+    else:
+        raise ValueError(f"Unsupported sample width: {sample_width}")
+
+    if channels == 2:
+        audio_array = audio_array.reshape(-1, 2)
+
+    # Play audio
+    sd.play(audio_array, samplerate=sample_rate)
+
+    # Wait for playback to complete
+    duration = len(audio_array) / sample_rate
+    await asyncio.sleep(duration + 0.1)  # Small buffer for completion
 
 
 async def main() -> None:
@@ -18,16 +57,18 @@ async def main() -> None:
 
     # Wait for noise calibration
     print("Calibrating noise level...")
-    await asyncio.sleep(2)
+    await asyncio.sleep(1)
 
     print("Say something, then be quiet for 1.5 seconds...")
     wav_data = await recorder.record_until_silence()
 
     if wav_data:
-        # Save to file for testing
-        with open("recorded_audio.wav", "wb") as f:
-            f.write(wav_data)
-        print(f"Audio saved to recorded_audio.wav ({len(wav_data)} bytes)")
+        print(f"Audio recorded ({len(wav_data)} bytes)")
+
+        # Play back the recorded audio
+        print("Playing back recorded audio...")
+        await play_wav_bytes(wav_data)
+        print("Playback complete")
     else:
         print("No audio recorded")
 

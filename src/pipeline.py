@@ -6,7 +6,6 @@ from src.interfaces import (
     ChatModel,
     SpeechToText,
     TextToSpeech,
-    WakeWordDetector,
 )
 
 
@@ -16,7 +15,6 @@ class SmartSpeakerPipeline:
     def __init__(
         self,
         *,
-        wake: WakeWordDetector,
         stt: SpeechToText,
         chat: ChatModel,
         tts: TextToSpeech,
@@ -24,12 +22,10 @@ class SmartSpeakerPipeline:
         """Initialize the pipeline.
 
         Args:
-        wake: Wake-word detector.
         stt: Speech-to-text engine.
         chat: Language model.
         tts: Text-to-speech engine.
         """
-        self._wake = wake
         self._stt = stt
         self._chat = chat
         self._tts = tts
