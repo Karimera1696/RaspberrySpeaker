@@ -4,7 +4,6 @@ from src.dev.dummy_impls import (
     DummyChatModel,
     DummySpeechToText,
     DummyTextToSpeech,
-    DummyWakeWordDetector,
 )
 from src.pipeline import SmartSpeakerPipeline
 
@@ -13,13 +12,11 @@ from src.pipeline import SmartSpeakerPipeline
 async def test_pipeline_contract() -> None:
     """Test that the pipeline contract (bytes→str→str→bytes) works end-to-end."""
     # Arrange
-    wake = DummyWakeWordDetector()
     stt = DummySpeechToText()
     chat = DummyChatModel()
     tts = DummyTextToSpeech()
 
     pipeline = SmartSpeakerPipeline(
-        wake=wake,
         stt=stt,
         chat=chat,
         tts=tts,
