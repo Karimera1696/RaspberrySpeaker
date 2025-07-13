@@ -5,10 +5,9 @@
 .claude/
 
 # models
-models/
-
-# Wav file generated in E2E test
-*.wav
+models/**/*.ppn
+models/**/*.pv
+!models/**/README.md
 
 # Byte-compiled / optimized / DLL files
 __pycache__/

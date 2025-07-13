@@ -34,7 +34,7 @@ class Settings(BaseSettings):
     # -------- Porcupine Settings --------
     PORCUPINE_MODEL_PATH: Path = MODEL_ROOT / "porcupine" / "acoustic" / "porcupine_params_ja.pv"
     PORCUPINE_KEYWORD_PATH: Path = (
-        MODEL_ROOT / "porcupine" / "wakewords" / "Zundamon_ja_raspberry-pi_v3_0_0.ppn"
+        MODEL_ROOT / "porcupine" / "wakewords" / "Sample_ja_raspberry-pi_v3_0_0.ppn"
     )
 
     model_config = SettingsConfigDict(env_file=".env", extra="ignore")
