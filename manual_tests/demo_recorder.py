@@ -2,6 +2,7 @@ import asyncio
 import io
 import wave
 
+import numpy as np
 import sounddevice as sd
 
 from src.audio.noise import NoiseSampler
@@ -60,7 +61,8 @@ async def main() -> None:
     await asyncio.sleep(1)
 
     print("Say something, then be quiet for 1.5 seconds...")
-    wav_data = await recorder.record_until_silence()
+    frame: list[np.ndarray] = await recorder.record_until_silence()
+    wav_data = recorder.frames_to_wav(frame)
 
     if wav_data:
         print(f"Audio recorded ({len(wav_data)} bytes)")

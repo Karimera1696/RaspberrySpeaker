@@ -1,5 +1,7 @@
 import asyncio
 
+import numpy as np
+
 from src.audio import AudioStream, NoiseSampler, Recorder
 from src.dev.dummy_impls import (
     DummyChatModel,
@@ -41,12 +43,12 @@ async def main() -> None:
             print("[Pipeline] Wake word detected!")
 
             # Dummy audio input
-            audio: bytes = await recorder.record_until_silence()
-            print("[Pipeline] Recorded data received (length:", len(audio), "byte)")
+            frames: list[np.ndarray] = await recorder.record_until_silence()
+            print("[Pipeline] Recorded data received (frame count:", len(frames), ")")
 
             # Run one cycle
-            audio_out = await pipeline.run_one_cycle(audio)
-            print("[Pipeline] TTS output (byte length:", len(audio_out), ")")
+            # audio_out = await pipeline.run_one_cycle(audio)
+            # print("[Pipeline] TTS output (byte length:", len(audio_out), ")")
 
             # Wait for the next wake word
             print("[Pipeline] Wait for the next Wake Word...")
