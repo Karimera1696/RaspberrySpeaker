@@ -15,6 +15,8 @@ pydantic-settings = "*"
 scipy = "^1.16.0"
 pytest = "^8.4.1"
 pytest-asyncio = "^1.0.0"
+aiohttp = "^3.12.14"
+aiortc = "^1.13.0"
 
 
 [build-system]
