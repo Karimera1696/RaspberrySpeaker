@@ -1,34 +1,17 @@
 import asyncio
 
-import numpy as np
-
-from src.audio import AudioStream, NoiseSampler, Recorder
-from src.dev.dummy_impls import (
-    DummyChatModel,
-    DummySpeechToText,
-    DummyTextToSpeech,
-)
-from src.pipeline import SmartSpeakerPipeline
+from src.audio import AudioStream, NoiseSampler
+from src.realtime.realtime import OpenAIRealtimeAPIWrapper
 from src.wake.porcupine_wake import PorcupineWakeWordDetector
 
 
 async def main() -> None:
     """Main entry point."""
-    # Initialize the wake word detector
-
+    # Initialize components
     stream = AudioStream()
     noise = NoiseSampler(stream)
-    recorder = Recorder(stream, noise)
-    wake_impl = PorcupineWakeWordDetector(stream)
-    stt_impl = DummySpeechToText()
-    chat_impl = DummyChatModel()
-    tts_impl = DummyTextToSpeech()
-
-    pipeline = SmartSpeakerPipeline(
-        stt=stt_impl,
-        chat=chat_impl,
-        tts=tts_impl,
-    )
+    wake_detector = PorcupineWakeWordDetector(stream)
+    realtime_client = OpenAIRealtimeAPIWrapper(stream)
 
     # Start background tasks
     stream_task = asyncio.create_task(stream.run())
@@ -37,22 +20,17 @@ async def main() -> None:
     try:
         while True:
             # Wake word detection
-            print("--- [Pipeline] Starting a new cycle ---")
-            print("[Pipeline] Waiting for the wake word...")
-            await wake_impl.wait_for_wake()
-            print("[Pipeline] Wake word detected!")
+            print("--- [Realtime] Starting a new cycle ---")
+            print("[Realtime] Waiting for the wake word...")
+            await wake_detector.wait_for_wake()
+            print("[Realtime] Wake word detected!")
 
-            # Dummy audio input
-            frames: list[np.ndarray] = await recorder.record_until_silence()
-            print("[Pipeline] Recorded data received (frame count:", len(frames), ")")
-
-            # Run one cycle
-            # audio_out = await pipeline.run_one_cycle(audio)
-            # print("[Pipeline] TTS output (byte length:", len(audio_out), ")")
+            # Connect to Realtime API - handles conversation until completion internally
+            await realtime_client.connect(audio_enabled=True)
 
             # Wait for the next wake word
-            print("[Pipeline] Wait for the next Wake Word...")
-            print("--- [Pipeline] Cycle completed ---")
+            print("[Realtime] Wait for the next Wake Word...")
+            print("--- [Realtime] Cycle completed ---")
             print()
     except KeyboardInterrupt:
         print("Shutting down...")

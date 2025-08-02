@@ -2,13 +2,14 @@ import asyncio
 import fractions
 import json
 import time
-from typing import Any, AsyncIterator
+from typing import Any
 
 import numpy as np
 from aiohttp import ClientError, ClientSession
 from aiortc import MediaStreamTrack, RTCPeerConnection
 from av import AudioFrame
 
+from ..audio.player import AudioPlayer
 from ..audio.stream import AudioStream
 from ..interfaces import RealtimeAPIClient
 from ..settings import settings
@@ -18,6 +19,7 @@ class OpenAIRealtimeAPIWrapper(RealtimeAPIClient):
     """OpenAI Realtime API WebRTC client wrapper."""
 
     _stream: AudioStream
+    _player: AudioPlayer
     _pc: RTCPeerConnection | None
     _dc: Any | None
     _start_time: float
@@ -30,6 +32,7 @@ class OpenAIRealtimeAPIWrapper(RealtimeAPIClient):
 
         """
         self._stream = stream
+        self._player = AudioPlayer()
         self._pc = None
         self._dc = None
         self._start_time = 0.0
@@ -82,7 +85,13 @@ class OpenAIRealtimeAPIWrapper(RealtimeAPIClient):
 
         @self._pc.on("track")
         def on_track(track: MediaStreamTrack) -> None:
-            print(f"Track received: {track.kind}")
+            if track.kind != "audio":
+                print(f"Unexpected track kind: {track.kind}, ignoring.")
+                return
+
+            print(f"Received track: {track.kind}")
+            asyncio.create_task(self._player.start())
+            asyncio.create_task(self._receive_audio_loop(track))
 
         self._pc.addTrack(AudioStreamTrack(self._stream))
 
@@ -128,6 +137,7 @@ class OpenAIRealtimeAPIWrapper(RealtimeAPIClient):
     async def disconnect(self) -> None:
         """Close WebRTC connection and cleanup resources."""
         print("Disconnecting and cleaning up resources.")
+        await self._player.stop()
         if self._dc:
             self._dc.close()
             self._dc = None
@@ -190,46 +200,19 @@ class OpenAIRealtimeAPIWrapper(RealtimeAPIClient):
         except KeyError as e:
             raise ValueError(f"Invalid response format: missing {e}") from e
 
-    async def configure_session(
-        self,
-        voice: str | None = None,
-        temperature: float | None = None,
-        system_message: str | None = None,
-    ) -> None:
-        """Configure session parameters via data channel."""
-        print(
-            f"Configuring session - voice: {voice}, temp: {temperature}, system: {system_message}"
-        )
-
-    async def start_audio_stream(self, audio_stream: AsyncIterator[bytes]) -> None:
-        """Start audio streaming via WebRTC peer connection."""
-        print("Starting audio stream.")
-        async for audio_chunk in audio_stream:
-            print(f"Processing audio chunk: {len(audio_chunk)} bytes")
-
-    def listen_audio_responses(self) -> AsyncIterator[bytes]:
-        """Listen for streaming audio responses."""
-
-        async def _generator() -> AsyncIterator[bytes]:
-            print("Listening for audio responses.")
+    async def _receive_audio_loop(self, track: MediaStreamTrack) -> None:
+        """Continuously receive audio frames from track."""
+        try:
             while True:
-                yield b"dummy_audio_chunk"
-
-        return _generator()
-
-    def listen_events(self) -> AsyncIterator[dict[str, Any]]:
-        """Listen for data channel events."""
-
-        async def _generator() -> AsyncIterator[dict[str, Any]]:
-            print("Listening for data channel events.")
-            while True:
-                yield {"type": "dummy_event", "data": "dummy_data"}
-
-        return _generator()
-
-    async def send_event(self, event: dict[str, Any]) -> None:
-        """Send event via data channel."""
-        print(f"Sending event: {event}")
+                frame = await track.recv()
+                if isinstance(frame, AudioFrame):
+                    audio_data = frame.to_ndarray()
+                    # Fix: aiortc Opus decoder creates (1, 1920) but should be (2, 960) stereo
+                    if audio_data.shape == (1, 1920) and frame.samples == 960:
+                        audio_data = audio_data.reshape(2, 960)
+                    await self._player.play_audio(audio_data)
+        except Exception as e:
+            print(f"Audio receiving ended: {e}")
 
 
 class AudioStreamTrack(MediaStreamTrack):
