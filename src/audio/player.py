@@ -55,7 +55,7 @@ class AudioPlayer:
         """Main playback loop."""
         current_frame: np.ndarray | None = None
 
-        def _cb(outdata: np.ndarray, frames: int, _time: float, _status: sd.CallbackFlags) -> None:
+        def _cb(outdata: np.ndarray, _frames: int, _time: float, _status: sd.CallbackFlags) -> None:
             nonlocal current_frame
             try:
                 if current_frame is None or current_frame.shape[1] == 0:
