@@ -58,7 +58,7 @@ class AudioPlayer:
         def _cb(outdata: np.ndarray, _frames: int, _time: float, _status: sd.CallbackFlags) -> None:
             nonlocal current_frame
             try:
-                if current_frame is None or current_frame.shape[1] == 0:
+                if current_frame is None or current_frame.shape[0] == 0:
                     # Get next frame from queue
                     try:
                         current_frame = self._queue.get_nowait()
@@ -69,7 +69,6 @@ class AudioPlayer:
 
                 # Fill output buffer using reshape approach like reference code
                 if current_frame is not None:
-                    print(f"[PLAYER] Input: {current_frame.shape}, Output needed: {outdata.shape}")
                     outdata[:] = current_frame.reshape(outdata.shape)
                     current_frame = None
 

@@ -2,7 +2,7 @@ import asyncio
 import fractions
 import json
 import time
-from typing import Any
+from typing import Any, AsyncIterator
 
 import numpy as np
 from aiohttp import ClientError, ClientSession
@@ -15,17 +15,20 @@ from ..interfaces import RealtimeAPIClient
 from ..settings import settings
 
 
-class OpenAIRealtimeAPIWrapper(RealtimeAPIClient):
-    """OpenAI Realtime API WebRTC client wrapper."""
+class RealtimeSession(RealtimeAPIClient):
+    """Individual Realtime API session."""
 
     _stream: AudioStream
     _player: AudioPlayer
     _pc: RTCPeerConnection | None
     _dc: Any | None
     _start_time: float
+    _audio_track: MediaStreamTrack | None
+    _is_recieving: bool = False
+    _speech_stopped_event: asyncio.Event
 
     def __init__(self, stream: AudioStream) -> None:
-        """Initialize the OpenAI Realtime API wrapper.
+        """Initialize the Realtime API session.
 
         Args:
             stream: AudioStream instance to read audio frames from.
@@ -36,7 +39,9 @@ class OpenAIRealtimeAPIWrapper(RealtimeAPIClient):
         self._pc = None
         self._dc = None
         self._start_time = 0.0
-        print("OpenAI Realtime API wrapper initialized.")
+        self._audio_track = None
+        self._speech_stopped_event = asyncio.Event()
+        print("Realtime API session initialized.")
 
     async def _initialize_api_session(
         self, modalities: list[str] = ["audio", "text"], default_prompt: str = ""
@@ -90,8 +95,7 @@ class OpenAIRealtimeAPIWrapper(RealtimeAPIClient):
                 return
 
             print(f"Received track: {track.kind}")
-            asyncio.create_task(self._player.start())
-            asyncio.create_task(self._receive_audio_loop(track))
+            self._audio_track = track
 
         self._pc.addTrack(AudioStreamTrack(self._stream))
 
@@ -137,17 +141,21 @@ class OpenAIRealtimeAPIWrapper(RealtimeAPIClient):
     async def disconnect(self) -> None:
         """Close WebRTC connection and cleanup resources."""
         print("Disconnecting and cleaning up resources.")
+        self._is_recieving = False
         await self._player.stop()
-        if self._dc:
+        if self._dc is not None:
             self._dc.close()
             self._dc = None
-        if self._pc:
+        if self._pc is not None:
             for sender in self._pc.getSenders():
-                if sender.track:
-                    print(f"Stopping track: {sender.track.kind}")
-                    sender.track.stop()
-            await self._pc.close()
-            self._pc = None
+                if sender.track and sender.track.kind == "audio":
+                    print(f"Stopping sender track: {sender.track.kind}")
+                    await sender.stop()
+            for receiver in self._pc.getReceivers():
+                if receiver.track and receiver.track.kind == "audio":
+                    print(f"Stopping receiver track: {receiver.track.kind}")
+                    await receiver.stop()
+            _pc = None
 
     def _handle_message(self, message: str, audio_enabled: bool) -> None:
         """Handle incoming WebRTC data channel messages."""
@@ -157,6 +165,24 @@ class OpenAIRealtimeAPIWrapper(RealtimeAPIClient):
             elapsed = time.perf_counter() - self._start_time if self._start_time > 0 else 0
             print(f"{elapsed:.2f}s User speech started")
             self._start_time = time.perf_counter()
+            # Reset speech stopped event for new speech
+            self._speech_stopped_event.clear()
+
+        def handle_user_speech_stopped(_: dict[str, Any]) -> None:
+            # ユーザーの発話停止処理
+            elapsed = time.perf_counter() - self._start_time if self._start_time > 0 else 0
+            print(f"{elapsed:.2f}s User speech stopped")
+
+            # Set event to notify speech stopped
+            self._speech_stopped_event.set()
+
+            # Stop sender tracks if already connected
+            if self._pc is None:
+                return
+            for sender in self._pc.getSenders():
+                if sender.track and sender.track.kind == "audio":
+                    print(f"Stopping sender track: {sender.track.kind}")
+                    asyncio.create_task(sender.stop())
 
         def handle_response_delta(data: dict[str, Any]) -> None:
             # delta処理
@@ -177,10 +203,12 @@ class OpenAIRealtimeAPIWrapper(RealtimeAPIClient):
             print(f"{elapsed:.2f}s Output audio buffer stopped")
             if audio_enabled:
                 print(f"{elapsed:.2f}s Disconnecting after audio playback")
-                asyncio.create_task(self.disconnect())
+                # asyncio.create_task(self.disconnect())
+            self._is_recieving = False  # Stop receiving audio
 
         handlers = {
             "input_audio_buffer.speech_started": handle_user_speech_started,
+            "input_audio_buffer.speech_stopped": handle_user_speech_stopped,
             "response.audio_transcript.delta": handle_response_delta,
             "response.audio_transcript.done": handle_response_done,
             "response.text.delta": handle_response_delta,
@@ -200,19 +228,56 @@ class OpenAIRealtimeAPIWrapper(RealtimeAPIClient):
         except KeyError as e:
             raise ValueError(f"Invalid response format: missing {e}") from e
 
-    async def _receive_audio_loop(self, track: MediaStreamTrack) -> None:
-        """Continuously receive audio frames from track."""
+    async def get_audio_stream(self) -> AsyncIterator[np.ndarray]:
+        """Get audio stream from the session.
+
+        Yields:
+            Audio data as numpy arrays.
+        """
+        if self._audio_track is None:
+            raise RuntimeError("No audio track available. Make sure session is connected.")
+
         try:
-            while True:
-                frame = await track.recv()
+            self._is_recieving = True
+            while self._is_recieving:
+                frame = await self._audio_track.recv()
                 if isinstance(frame, AudioFrame):
                     audio_data = frame.to_ndarray()
-                    # Fix: aiortc Opus decoder creates (1, 1920) but should be (2, 960) stereo
-                    if audio_data.shape == (1, 1920) and frame.samples == 960:
-                        audio_data = audio_data.reshape(2, 960)
-                    await self._player.play_audio(audio_data)
+                    yield audio_data
         except Exception as e:
-            print(f"Audio receiving ended: {e}")
+            print(f"Audio stream ended: {e}")
+            return
+
+    async def wait_for_speech_stopped(self) -> None:
+        """Wait for user speech to stop.
+        
+        This method will block until handle_user_speech_stopped is called.
+        """
+        await self._speech_stopped_event.wait()
+
+
+class RealtimeSessionManager:
+    """Singleton manager for Realtime API sessions."""
+
+    _current_session: RealtimeSession | None = None
+
+    @classmethod
+    async def get_session(cls, stream: AudioStream) -> RealtimeSession:
+        """Get or create Realtime API session.
+
+        Args:
+            stream: AudioStream instance for the session.
+
+        Returns:
+            RealtimeSession instance.
+        """
+        # Disconnect existing session if any
+        if cls._current_session is not None:
+            await cls._current_session.disconnect()
+
+        # Create new session (connection is done separately)
+        cls._current_session = RealtimeSession(stream)
+        return cls._current_session
 
 
 class AudioStreamTrack(MediaStreamTrack):
