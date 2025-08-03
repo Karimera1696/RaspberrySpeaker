@@ -31,6 +31,11 @@ class Settings(BaseSettings):
     OPENAI_API_KEY: str | None = None
     PORCUPINE_ACCESS_KEY: str | None = None
 
+    # -------- OpenAI Realtime API --------
+    REALTIME_API_NEW_SESSION_URL: str = "https://api.openai.com/v1/realtime/sessions"
+    REALTIME_API_SIGNALING_URL: str = "https://api.openai.com/v1/realtime"
+    REALTIME_MODEL: str = "gpt-4o-realtime-preview"
+
     # -------- Porcupine Settings --------
     PORCUPINE_MODEL_PATH: Path = MODEL_ROOT / "porcupine" / "acoustic" / "porcupine_params_ja.pv"
     PORCUPINE_KEYWORD_PATH: Path = (

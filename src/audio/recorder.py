@@ -34,14 +34,14 @@ class Recorder:
         self._noise = noise
         self._rms_window = deque(maxlen=5)
 
-    async def record_until_silence(self, timeout: float | None = None) -> bytes:
+    async def record_until_silence(self, timeout: float | None = None) -> list[np.ndarray]:
         """Record audio until silence is detected or timeout occurs.
 
         Args:
             timeout: Maximum recording duration in seconds.
 
         Returns:
-            WAV format audio data for STT processing.
+            List of audio frames (numpy arrays) recorded until silence.
         """
         max_duration = timeout or settings.MAX_RECORD_DURATION
         silence_duration = settings.SILENCE_DURATION
@@ -85,11 +85,11 @@ class Recorder:
         # Convert frames to WAV bytes
         if not frames:
             print("[Recorder] Warning: No frames recorded")
-            return b""
+            return []
 
-        return self._frames_to_wav(frames)
+        return frames
 
-    def _frames_to_wav(self, frames: list[np.ndarray]) -> bytes:
+    def frames_to_wav(self, frames: list[np.ndarray]) -> bytes:
         """Convert audio frames to WAV format bytes."""
         # Concatenate all frames
         audio_data = np.concatenate(frames)
