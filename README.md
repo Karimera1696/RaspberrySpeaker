@@ -1,4 +1,4 @@
-# SmartSpeaker2
+# RaspberrySpeaker(仮称)
 
 A self-hosted, fully-async **smart-speaker pipeline**:
 
@@ -20,8 +20,8 @@ A self-hosted, fully-async **smart-speaker pipeline**:
 
 ## Quick Start ⚠️ *Experimental*
 
-> **⚠️  This section has **not** been fully verified yet.**  
-> 実機での動作はまだ検証中です。手順が変わる可能性があります。
+> **⚠️  This section has **not** been verified yet.**  
+> 実機での動作はまだ未検証です。手順が変わる可能性があります。
 
 ```bash
 git clone https://github.com/Karimera1696/SmartSpeaker2
